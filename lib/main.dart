@@ -1,91 +1,167 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [Draggable].
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  static const String _title = 'Flutter Stateful Clicker Counter';
-  // This widget is the root of your application.
+void main() => runApp(const DraggableExampleApp());
+
+class DraggableExampleApp extends StatelessWidget {
+  const DraggableExampleApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: _title,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Draggable Sample')),
+        body: const DraggableExample(),
       ),
-      home: const MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-  // This class is the configuration for the state.
+class DraggableExample extends StatefulWidget {
+  const DraggableExample({super.key});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<DraggableExample> createState() => _DraggableExampleState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+class _DraggableExampleState extends State<DraggableExample> {
+  int acceptedData = 0;
+  int currentIndex = 0;
+  List<String> images = [
+    "1045782.png",
+    "1151519.png",
+    "1285341.png",
+    "1647775.png",
+    "1866475.png",
+    "2948404.png",
+    "3169476.png",
+    "323262.png",
+    "339400.png",
+    "4611189.png",
+    "5098930.png",
+    "694730.png"
+  ];
+  List<String> acceptedCats = [];
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: const Text('Flutter Demo Click Counter'),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 25),
+            Draggable<int>(
+              // Data is the value this Draggable stores.
+              data: 10,
+              feedback: Container(
+                width: screenHeight / 2,
+                height: screenWidth / 2,
+                child: Image.asset('assets/web/' + images[currentIndex]),
+              ),
+              childWhenDragging: Container(
+                width: screenHeight,
+                height: screenWidth,
+                child: Image.asset('assets/web/' + images[currentIndex + 1]),
+              ),
+              child: Container(
+                width: screenHeight,
+                height: screenWidth,
+                child: Image.asset('assets/web/' + images[currentIndex]),
+              ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            DragTarget<int>(
+              builder: (
+                BuildContext context,
+                List<dynamic> accepted,
+                List<dynamic> rejected,
+              ) {
+                return Container(
+                  height: 100.0,
+                  width: 100.0,
+                  color: Color(0xff12d400),
+                  child: Center(
+                    child: Text('Accept'),
+                  ),
+                );
+              },
+              onAccept: (int data) {
+                setState(() {
+                  currentIndex = (currentIndex + 1) % images.length;
+                  acceptedCats
+                      .add(images[currentIndex]); // Save accepted filename
+                  if (currentIndex == 10) {
+                    currentIndex = 0;
+                  }
+                });
+              },
+            ),
+            const SizedBox(width: 20.0),
+            DragTarget<int>(
+              builder: (
+                BuildContext context,
+                List<dynamic> accepted,
+                List<dynamic> rejected,
+              ) {
+                return Container(
+                  height: 100.0,
+                  width: 100.0,
+                  color: Color(0xffd40000),
+                  child: Center(
+                    child: Text('Reject'),
+                  ),
+                );
+              },
+              onAccept: (int data) {
+                setState(() {
+                  currentIndex = (currentIndex + 1) % images.length;
+                  if (currentIndex == 10) {
+                    currentIndex = 0;
+                  }
+                });
+              },
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                // Display the list of accepted filenames
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Accepted Cats'),
+                      content: Column(
+                        children: acceptedCats
+                            .map((cat) => ListTile(title: Text(cat)))
+                            .toList(),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: const Text('Show Accepted Cats'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
